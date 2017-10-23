@@ -1,0 +1,62 @@
+package Wildlife
+
+import TimerUtils
+import MapBounds
+
+hashtable hash = InitHashtable()
+
+function integer.evolveLink(integer evolveTo) returns integer
+    hash.saveInt(this, 0, evolveTo)
+    return evolveTo
+
+function unit.canEvolve() returns boolean
+    return hash.loadInt(this.getTypeId(), 0) > 0
+
+function unit.evolve()
+    real x = this.getX()
+    real y = this.getY()
+    real facing = this.getFacing()
+    player owner = this.getOwner()
+    integer id = hash.loadInt(this.getTypeId(), 0)
+
+    this.remove()
+    CreateUnit(owner, id, x, y, facing)
+
+public class Wildlife
+    private static real loopSpeed = 1
+    private static integer expRate = 50
+    private static integer expLevel = 180
+
+    private real exp = 0
+    private unit animal
+
+    construct(unit u)
+        getTimer()
+        ..setData(this castTo int)
+        ..startPeriodic(loopSpeed, function onLoop)
+
+        animal = u
+
+    static function onLoop()
+        thistype instance = GetExpiredTimer().getData() castTo thistype
+        instance.exp += expRate
+        instance.animal.setScale(1 + (instance.exp / 400))
+        print(instance.exp)
+        if instance.exp >= expLevel
+            GetExpiredTimer().release()
+            instance.animal.evolve()
+            print("Evolve!")
+            destroy instance
+
+init
+    'hpea'.evolveLink('hfoo').evolveLink('Hpal')
+
+    CreateTrigger()
+    ..registerEnterRegion(boundRegion, null)
+    ..addAction(() -> begin
+        unit u = GetTriggerUnit()
+        if u.canEvolve()
+            new Wildlife(u)
+    end)
+
+    CreateUnit(players[0], 'hpea', 0, 0, 0)
