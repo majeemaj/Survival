@@ -43,7 +43,9 @@ public class Wildlife
         instance.animal.setScale(1 + (instance.exp / 400))
         print(instance.exp)
         if instance.exp >= expLevel
-            GetExpiredTimer().release()
+            GetExpiredTimer()
+            ..pause()
+            ..release()
             instance.animal.evolve()
             print("Evolve!")
             destroy instance
@@ -51,7 +53,7 @@ public class Wildlife
 
 // Demo code
 init
-    'hpea'.evolveLink('hfoo').evolveLink('Hpal')
+    //'hpea'.evolveLink('hfoo').evolveLink('Hpal')
 
     CreateTrigger()
     ..registerEnterRegion(boundRegion, null)
