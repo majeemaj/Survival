@@ -1,7 +1,5 @@
 package Wildlife
 
-//testing
-
 import TimerUtils
 import MapBounds
 
@@ -50,6 +48,8 @@ public class Wildlife
             print("Evolve!")
             destroy instance
 
+
+// Demo code
 init
     'hpea'.evolveLink('hfoo').evolveLink('Hpal')
 
