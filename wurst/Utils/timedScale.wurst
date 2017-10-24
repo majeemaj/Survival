@@ -1,0 +1,86 @@
+package timedScale
+
+import TimerUtils
+
+hashtable hash = InitHashtable()
+
+function unit.setScaleTimed(real scale, real time)
+    if this.hasScaledBefore()
+        TimedUnitScale instance = hash.loadInt(this.getHandleId(), 1) castTo TimedUnitScale
+        instance.setGoalScale(scale)
+        instance.setDeadline(time)
+        instance.resume()
+    else
+        hash.saveBoolean(this.getHandleId(), 0, true)
+        hash.saveInt(this.getHandleId(), 1, new TimedUnitScale(this, scale, time) castTo int)
+
+function unit.hasScaledBefore() returns boolean
+    return hash.loadBoolean(this.getHandleId(), 0)
+
+class TimedUnitScale
+    private real goalScale
+    private real currentScale
+    private real deadline
+    private unit target
+    private timer t
+
+    private boolean positive
+
+    private real SPS //Scale Per Second
+
+    construct(unit u, real scale, real time)
+        deadline = time
+        goalScale = scale
+        SPS = scale / time
+        currentScale = 1
+        target = u
+
+        positive = currentScale < goalScale ? true : false
+
+        t = getTimer()
+        ..setData(this castTo int)
+        ..startPeriodic(0.03, function onLoop)
+
+    
+    private static function onLoop()
+        thistype instance = GetExpiredTimer().getData() castTo thistype
+        instance.addScale(instance.positive)
+
+    private function addScale(bool positive)
+        real toIncrease = positive ? currentScale + (SPS * 0.03) : currentScale - (SPS * 0.03)
+
+        target.setScale(toIncrease)
+        currentScale = toIncrease
+        if (positive and currentScale >= goalScale) or (not positive and currentScale <= goalScale)
+            target.setScale(currentScale)
+            t.release()
+                
+    
+    function setGoalScale(real scale)
+        goalScale = scale
+
+    function setDeadline(real time)
+        deadline = time
+
+    function resume()
+        positive = currentScale < goalScale ? true : false
+        t = getTimer()
+        ..setData(this castTo int)
+        ..startPeriodic(0.03, function onLoop)
+
+
+unit u
+real sc = 0
+init
+    u = CreateUnit(players[0], 'Hpal', 0, 0, 0)
+    PanCameraToTimed(250, 0, 0)
+
+    test()
+    getTimer()
+    ..startPeriodic(4.1, () -> begin
+        test()
+    end)
+
+function test()
+    sc = sc == 2 ? 1 : 2
+    u.setScaleTimed(sc, 4)
