@@ -1,0 +1,68 @@
+package Patrol
+
+import Vectors
+import LinkedList
+import TimerUtils
+
+enum PatrolOrder
+    MOVE
+    ATTACK
+
+function unit.patrol() returns Patrol
+    return new Patrol(this)
+
+class Path
+    vec2 pos
+    construct(vec2 v)
+        pos = v
+
+class Patrol
+    unit u
+    LinkedList<Path> path
+    Path current
+
+    construct(unit toPatrol)
+        u = toPatrol
+        path = new LinkedList<Path>()
+
+    function addPoint(vec2 pos)
+        Path p = new Path(pos)
+        path.add(p)
+
+    function addPath(LinkedList<Path> l)
+        path = l
+
+    function getPath() returns LinkedList<Path>
+        return path
+
+    function start()
+        u.issuePointOrder("move", current.pos)
+        getTimer()
+        ..setData(this castTo int)
+        ..startPeriodic(0.03, () -> begin
+            thistype instance = GetExpiredTimer().getData() castTo thistype
+            if instance.u.getPos().distanceTo(instance.current.pos) < 50
+                instance.current = instance.path.get(instance.path.indexOf(instance.current) + 1)
+                instance.u.issuePointOrder("move", instance.current.pos)
+        end)
+
+init
+        LinkedList<Path> p
+        unit u
+        Patrol inst
+
+        u = CreateUnit(players[0], 'Hpal', 0, 0, 0)
+        inst = u.patrol()
+        ..addPoint(vec2(500, 0  ))
+        ..addPoint(vec2(500, 500))
+        ..addPoint(vec2(0  , 500))
+        ..addPoint(vec2(0  , 0  ))
+        ..start()
+        p = inst.getPath()
+
+        u = CreateUnit(players[0], 'Hpal', 0, 0, 0)
+        inst = u.patrol()
+        inst.addPath(p)
+        inst.start()
+
+        
