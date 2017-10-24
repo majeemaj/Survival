@@ -1,0 +1,24 @@
+package outOfCombatReg
+
+import inCombat
+import TimerUtils
+
+function unit.isFullHP() returns boolean
+    return this.getHP() == this.getMaxHP()
+
+init
+    getTimer()
+    ..startPeriodic(0.15, () -> begin
+        group allHostile = GetUnitsOfPlayerAll(players[PLAYER_NEUTRAL_AGGRESSIVE])
+        for u in allHostile
+            if not u.isInCombat() and not u.isFullHP()
+                CreateTextTag()
+                ..setPos(u.getX(), u.getY(), 0)
+                ..setColor(0, 255, 0, 255)
+                ..setLifespan(0.3)
+                ..setPermanent(FALSE)
+                ..setText("+2", 12)
+                ..setVelocity(0, 0.1)
+                u.addHP(2)
+
+    end)

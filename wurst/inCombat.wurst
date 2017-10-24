@@ -1,0 +1,53 @@
+package inCombat
+
+import DamageDetection
+import TimerUtils
+
+hashtable hash = InitHashtable()
+
+
+public function unit.isInCombat() returns boolean
+    return hash.loadBoolean(this.getHandleId(), 1)
+
+function unit.setCombat()
+    unit u = this
+    integer id = u.getHandleId()
+
+    if hash.loadTimerHandle(id, 0) != null
+        hash.loadTimerHandle(id, 0)
+        ..setData(1)
+        ..release()
+
+    timer t = getTimer()
+    
+    t.setData(u.getHandleId())
+
+    hash.saveTimerHandle(id, 0, t)
+    hash.saveBoolean(id, 1, true)
+
+    t.start(5, () -> begin
+        print("No longer in combat!")
+        hash.saveBoolean(GetExpiredTimer().getData(), 1, false)
+        GetExpiredTimer()
+        ..setData(1)
+        ..release()
+    end)
+    t = null
+init
+    CreateTrigger()
+    ..registerAnyUnitEvent(EVENT_PLAYER_UNIT_DEATH)
+    ..addAction(() -> begin
+        unit u = GetTriggerUnit()
+        integer id = u.getHandleId()
+        timer t = hash.loadTimerHandle(id, 0)
+        if(t != null)
+            t.setData(1)
+            t.release()
+        hash.flushChild(id)
+    end)
+
+    enableDamageDetect()
+    addOnDamageFunc(Condition(() -> begin
+        GetTriggerUnit().setCombat()
+        GetEventDamageSource().setCombat()
+    end))
