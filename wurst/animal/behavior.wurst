@@ -1,0 +1,19 @@
+package behavior
+
+import inCombat
+import Wander
+import TimerUtils
+
+function test() returns boolean
+    return GetFilterUnit().isInCombat()
+init
+    getTimer()
+    ..startPeriodic(0.03, () -> begin
+        for u in wanderers
+            if u.isInCombat()
+                u.pauseWandering()
+        for u in GetUnitsOfPlayerAll(players[12])
+            if(not u.isInCombat() and not u.isWandering())
+                u.resumeWandering()
+    end)
+    

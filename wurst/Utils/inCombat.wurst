@@ -25,14 +25,14 @@ function unit.setCombat()
     hash.saveTimerHandle(id, 0, t)
     hash.saveBoolean(id, 1, true)
 
-    t.start(5, () -> begin
+    t.start(15, () -> begin
         print("No longer in combat!")
         hash.saveBoolean(GetExpiredTimer().getData(), 1, false)
         GetExpiredTimer()
         ..setData(1)
         ..release()
     end)
-    t = null
+    
 init
     CreateTrigger()
     ..registerAnyUnitEvent(EVENT_PLAYER_UNIT_DEATH)

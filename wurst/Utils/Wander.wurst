@@ -1,0 +1,58 @@
+package Wander
+
+import TimerUtils
+import Vectors
+
+public group wanderers = CreateGroup()
+hashtable hash = InitHashtable()
+
+real offset = 1000
+real delay = 2
+
+function unit.startWander()
+    hash.saveReal(this.getHandleId(), 2, this.getX())
+    hash.saveReal(this.getHandleId(), 3, this.getY())
+    this.generateWanderVec()
+    wanderers.addUnit(this)
+
+public function unit.isWandering() returns boolean
+    return wanderers.contains(this)
+
+public function unit.pauseWandering()
+    wanderers.removeUnit(this)
+
+public function unit.resumeWandering()
+    wanderers.addUnit(this)
+    this.generateWanderVec()
+
+function vec2.polarProjection(real dist, real angle) returns vec2
+    real x = this.x + dist * Cos(angle * bj_DEGTORAD)
+    real y = this.y + dist * Sin(angle * bj_DEGTORAD)
+    return vec2(x, y)
+
+function unit.generateWanderVec() returns vec2
+    int id = this.getHandleId()
+    vec2 pos = vec2(hash.loadReal(id, 2), hash.loadReal(id, 3))
+
+    vec2 randomPos = pos.polarProjection(GetRandomReal(50, offset), GetRandomReal(1, 360))
+
+    hash.saveReal(id, 0, randomPos.x)
+    hash.saveReal(id, 1, randomPos.y)
+
+    this.issuePointOrder("attack", randomPos)
+
+    return randomPos
+
+init
+    for u in GetUnitsOfPlayerAll(players[12])
+        u.startWander()
+        
+    getTimer()
+    ..startPeriodic(0.03, () -> begin
+        for u in wanderers
+            integer id = u.getHandleId()
+            vec2 goal = vec2(hash.loadReal(id, 0), hash.loadReal(id, 1))
+            vec2 pos = u.getPos()
+            if pos.distanceTo(goal) < 50
+                u.generateWanderVec()
+    end)
